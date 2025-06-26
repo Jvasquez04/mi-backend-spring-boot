@@ -1,0 +1,41 @@
+# Maven
+target/
+
+# Gradle
+.gradle/
+build/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Compiled class files
+*.class
+
+# Package Files
+*.jar
+*.war
+*.ear
+
+# Log files
+*.log
+logs/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Specific to Spring Boot
+/src/main/resources/application*.properties
+/src/main/resources/application*.yml
+!/src/main/resources/application.properties.example # Si tienes un archivo de ejemplo sin datos sensibles
+!/src/main/resources/application.yml.example
+
+# Eclipse
+.project
+.classpath
+.settings/
+bin/ 
