@@ -15,8 +15,6 @@ import {
   SelectChangeEvent
 } from '@mui/material';
 import { Producto, Categoria } from '../types';
-import { getCategorias } from '../services/api';
-import { getToken } from '../utils/auth';
 
 const imagenesBebidas: Record<string, string> = {
   'Ron Barceló': 'https://www.licoresmedellin.com/cdn/shop/products/ron-barcelo-anejo-700ml.jpg?v=1677692782',
@@ -61,7 +59,6 @@ const ProductoForm: React.FC<ProductoFormProps> = ({
   });
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [localImage, setLocalImage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [precioError, setPrecioError] = useState('');
   const [stockError, setStockError] = useState('');
   const [nombreError, setNombreError] = useState('');
@@ -94,24 +91,8 @@ const ProductoForm: React.FC<ProductoFormProps> = ({
   }, [producto]);
 
   useEffect(() => {
-    const fetchCategorias = async () => {
-      try {
-        const token = getToken();
-        if (!token) return;
-        const data = await getCategorias(token);
-        let categoriasArray = [];
-        if (Array.isArray(data)) {
-          categoriasArray = data;
-        } else if (data && Array.isArray(data.content)) {
-          categoriasArray = data.content;
-        }
-        setCategorias(categoriasArray);
-      } catch (error) {
-        console.error('Error fetching categorias:', error);
-        setCategorias([]);
-      }
-    };
-    fetchCategorias();
+    const categoriasLocal = JSON.parse(localStorage.getItem('categorias') || '[]');
+    setCategorias(categoriasLocal);
   }, []);
 
   const validateField = (field: keyof ProductoFormData, value: string) => {
@@ -252,11 +233,6 @@ const ProductoForm: React.FC<ProductoFormProps> = ({
           {producto ? 'Editar Producto' : 'Nuevo Producto'}
         </DialogTitle>
         <DialogContent>
-          {error && (
-            <Box mb={2}>
-              <span style={{ color: 'red' }}>{error}</span>
-            </Box>
-          )}
           {successMsg && (
             <Box mb={2}>
               <span style={{ color: 'green' }}>{successMsg}</span>

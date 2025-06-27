@@ -18,8 +18,6 @@ import {
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { Categoria } from '../types';
 import CategoriaForm from '../components/CategoriaForm';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { getToken } from '../utils/auth';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 

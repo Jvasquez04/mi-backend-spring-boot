@@ -4,7 +4,6 @@ import {
   Typography,
   Grid,
   Card,
-  CardContent,
   Button,
   Box,
   Snackbar,
@@ -24,18 +23,15 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  InputAdornment,
-  Collapse
+  InputAdornment
 } from '@mui/material';
 import { ShoppingCart, Add, Remove, Delete, Clear, Print } from '@mui/icons-material';
 import { Producto, Venta, Categoria } from '../types';
-import { getProductos, getCategorias } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { getToken } from '../utils/auth';
 
 // Imágenes de ejemplo para bebidas
 const imagenesBebidas: Record<string, string> = {
@@ -55,7 +51,6 @@ const QR_YAPE = 'https://play-lh.googleusercontent.com/1Qw1kQnQw1kQnQw1kQnQw1kQn
 
 const VentasPage: React.FC = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
-  const [ventas, setVentas] = useState<Venta[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [carrito, setCarrito] = useState<CarritoItem[]>([]);
@@ -69,55 +64,24 @@ const VentasPage: React.FC = () => {
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'yape'>('efectivo');
   const [recibido, setRecibido] = useState('');
   const [vuelto, setVuelto] = useState(0);
-  const [categoriaDesplegada, setCategoriaDesplegada] = useState<number | null>(null);
   const [search, setSearch] = useState('');
-  const [expanded, setExpanded] = useState<number | false>(false);
   const [ventaReciente, setVentaReciente] = useState<Venta | null>(null);
 
   useEffect(() => {
     fetchProductos();
-    fetchVentas();
     fetchCategorias();
   }, []);
 
-  const fetchProductos = async () => {
-    const token = getToken();
-    if (!token) {
-      return;
-    }
-    try {
-      setLoading(true);
-      // Intentar cargar productos desde localStorage primero
-      const productosLocal = JSON.parse(localStorage.getItem('productos') || 'null');
-      if (productosLocal && Array.isArray(productosLocal)) {
-        setProductos(productosLocal);
-        setLoading(false);
-        return;
-      }
-      const data = await getProductos(token);
-      setProductos(data);
-      localStorage.setItem('productos', JSON.stringify(data));
-    } catch (error) {
-      showSnackbar('Error al cargar productos', 'error');
-    } finally {
-      setLoading(false);
-    }
+  const fetchProductos = () => {
+    setLoading(true);
+    const productosLocal = JSON.parse(localStorage.getItem('productos') || '[]');
+    setProductos(productosLocal);
+    setLoading(false);
   };
 
-  const fetchVentas = () => {
-    const ventasLocal = JSON.parse(localStorage.getItem('ventas') || '[]');
-    setVentas(ventasLocal);
-  };
-
-  const fetchCategorias = async () => {
-    try {
-      const token = getToken();
-      if (!token) return;
-      const data = await getCategorias(token);
-      setCategorias(data);
-    } catch (error) {
-      showSnackbar('Error al cargar categorías', 'error');
-    }
+  const fetchCategorias = () => {
+    const categoriasLocal = JSON.parse(localStorage.getItem('categorias') || '[]');
+    setCategorias(categoriasLocal);
   };
 
   const agregarAlCarrito = (producto: Producto) => {
@@ -196,7 +160,6 @@ const VentasPage: React.FC = () => {
         return actualizados;
       });
       limpiarCarrito();
-      fetchVentas();
       if (window && typeof window.dispatchEvent === 'function') {
         window.dispatchEvent(new Event('ventaRealizada'));
       }
@@ -211,7 +174,8 @@ const VentasPage: React.FC = () => {
     setSnackbar({ open: true, message, severity });
   };
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | undefined | null) => {
+    if (typeof value !== 'number' || isNaN(value)) return 'S/ 0.00';
     return `S/ ${value.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`;
   };
 
@@ -231,10 +195,6 @@ const VentasPage: React.FC = () => {
     setVuelto(0);
   };
 
-  const handleAccordionChange = (catId: number) => (_: any, isExpanded: boolean) => {
-    setExpanded(isExpanded ? catId : false);
-  };
-
   // Filtro de productos por búsqueda
   const productosFiltrados = productos.filter(p =>
     p.nombre.toLowerCase().includes(search.toLowerCase())
@@ -244,17 +204,6 @@ const VentasPage: React.FC = () => {
     ...cat,
     productos: productosFiltrados.filter(p => p.categoriaId === cat.id)
   })).filter(cat => cat.productos.length > 0);
-
-  useEffect(() => {
-    if (productosPorCategoria.length > 0) {
-      // Si hay búsqueda, expande la primera categoría relevante
-      if (search) {
-        setExpanded(productosPorCategoria[0].id);
-      } else if (expanded === false) {
-        setExpanded(productosPorCategoria[0].id);
-      }
-    }
-  }, [productosPorCategoria, search]);
 
   // Función para imprimir solo la boleta
   const imprimirBoleta = () => {
@@ -311,7 +260,7 @@ const VentasPage: React.FC = () => {
             <Typography color="text.secondary">No se encontraron productos.</Typography>
           ) : (
             productosPorCategoria.map(cat => (
-              <Accordion key={cat.id} expanded={expanded === cat.id} onChange={handleAccordionChange(cat.id)} TransitionProps={{ unmountOnExit: true }}>
+              <Accordion key={cat.id} TransitionProps={{ unmountOnExit: true }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography variant="h6" fontWeight="bold">{cat.nombre}</Typography>
                 </AccordionSummary>
@@ -329,7 +278,7 @@ const VentasPage: React.FC = () => {
                           <Typography variant="h6" fontWeight="bold" noWrap>{producto.nombre}</Typography>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1, whiteSpace: 'normal', overflow: 'hidden', textOverflow: 'ellipsis' }}>{producto.descripcion}</Typography>
                           <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" sx={{ mb: 1 }}>
-                            <Typography variant="subtitle1" color="primary" fontWeight="bold">{formatCurrency(producto.precioVenta)}</Typography>
+                            <Typography variant="subtitle1" color="primary" fontWeight="bold">{formatCurrency(producto.precioVenta ?? 0)}</Typography>
                             <Typography variant="caption" color={producto.stockActual < 10 ? 'error' : 'text.secondary'} sx={{ fontWeight: producto.stockActual < 10 ? 'bold' : undefined }}>
                               Stock: {producto.stockActual}
                             </Typography>
@@ -373,7 +322,7 @@ const VentasPage: React.FC = () => {
                       secondary={
                         <>
                           <Typography variant="body2" color="text.secondary">
-                            {formatCurrency(item.producto.precioVenta)} x {item.cantidad}
+                            {formatCurrency(item.producto.precioVenta ?? 0)} x {item.cantidad}
                           </Typography>
                           <Box display="flex" alignItems="center" gap={1} mt={1}>
                             <IconButton size="small" onClick={() => cambiarCantidad(item.producto.id, item.cantidad - 1)} disabled={item.cantidad <= 1}>
@@ -405,7 +354,7 @@ const VentasPage: React.FC = () => {
             <Divider sx={{ my: 2 }} />
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
               <Typography variant="h6">Total:</Typography>
-              <Typography variant="h6" color="primary">{formatCurrency(calcularTotal())}</Typography>
+              <Typography variant="h6" color="primary">{formatCurrency(calcularTotal() ?? 0)}</Typography>
             </Box>
             <Button
               variant="contained"
@@ -436,7 +385,7 @@ const VentasPage: React.FC = () => {
         <DialogTitle>Finalizar venta</DialogTitle>
         <DialogContent>
           <Typography variant="subtitle1" gutterBottom>
-            Total a pagar: <b>{formatCurrency(calcularTotal())}</b>
+            Total a pagar: <b>{formatCurrency(calcularTotal() ?? 0)}</b>
           </Typography>
           <RadioGroup
             row
@@ -458,11 +407,11 @@ const VentasPage: React.FC = () => {
                 InputProps={{
                   startAdornment: <InputAdornment position="start">S/</InputAdornment>,
                 }}
-                inputProps={{ min: calcularTotal() }}
+                inputProps={{ min: calcularTotal() ?? 0 }}
                 sx={{ mb: 2 }}
               />
               <Typography variant="body2">
-                Vuelto: <b style={{ color: vuelto < 0 ? 'red' : 'green' }}>{formatCurrency(vuelto)}</b>
+                Vuelto: <b style={{ color: vuelto < 0 ? 'red' : 'green' }}>{formatCurrency(vuelto ?? 0)}</b>
               </Typography>
             </>
           ) : (
@@ -482,7 +431,7 @@ const VentasPage: React.FC = () => {
             onClick={handleConfirmarVenta}
             variant="contained"
             color="primary"
-            disabled={saving || (metodoPago === 'efectivo' && (parseFloat(recibido) < calcularTotal()))}
+            disabled={saving || (metodoPago === 'efectivo' && (parseFloat(recibido) < calcularTotal() ?? 0))}
           >
             Confirmar y registrar venta
           </Button>
@@ -505,7 +454,7 @@ const VentasPage: React.FC = () => {
                 {ventaReciente.productosVendidos.map((prod, idx) => (
                   <Box key={idx} display="flex" justifyContent="space-between">
                     <span>{prod.producto.nombre} x{prod.cantidad || 1}</span>
-                    <span>S/ {((prod.producto.precioVenta) * (prod.cantidad || 1)).toFixed(2)}</span>
+                    <span>S/ {((prod.producto.precioVenta ?? 0) * (prod.cantidad || 1)).toFixed(2)}</span>
                   </Box>
                 ))}
               </Box>

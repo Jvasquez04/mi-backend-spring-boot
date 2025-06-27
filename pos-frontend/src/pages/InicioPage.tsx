@@ -12,12 +12,6 @@ const caracteristicas = [
   { icon: <SportsBarIcon sx={{ fontSize: 48, color: 'primary.main' }} />, text: 'Control de mesas de billar y cobro por tiempo' },
 ];
 
-const ventajas = [
-  { icon: <StorefrontIcon color="secondary" />, title: 'Soporte dedicado', desc: 'Te acompañamos en todo momento para que tu negocio nunca se detenga.' },
-  { icon: <StorefrontIcon color="secondary" />, title: 'Rápido y eficiente', desc: 'Optimiza tus ventas y operaciones con una plataforma ágil.' },
-  { icon: <StorefrontIcon color="secondary" />, title: 'Seguro', desc: 'Tus datos y los de tus clientes siempre protegidos.' },
-];
-
 const InicioPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -64,7 +58,6 @@ const InicioPage: React.FC = () => {
             ))}
           </Grid>
         </Box>
-        {/* Ventajas (opcional, puedes dejarlo o quitarlo si solo quieres características) */}
       </Container>
     </Box>
   );

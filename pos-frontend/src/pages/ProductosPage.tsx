@@ -16,16 +16,11 @@ import {
   Alert,
   Snackbar,
   Avatar,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   TextField,
   ButtonGroup
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { Producto, Categoria } from '../types';
-import { getCategorias } from '../services/api';
 import ProductoForm from '../components/ProductoForm';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useNavigate } from 'react-router-dom';
@@ -56,7 +51,6 @@ const ProductosPage: React.FC = () => {
   const [busqueda, setBusqueda] = useState('');
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const token = localStorage.getItem('token');
 
   useEffect(() => {
     if (!authLoading && user?.rol === 'CAJERO') {
@@ -76,21 +70,9 @@ const ProductosPage: React.FC = () => {
     setLoading(false);
   };
 
-  const fetchCategorias = async () => {
-    if (!token) return;
-    try {
-      const data = await getCategorias(token);
-      let categoriasArray = [];
-      if (Array.isArray(data)) {
-        categoriasArray = data;
-      } else if (data && Array.isArray(data.content)) {
-        categoriasArray = data.content;
-      }
-      setCategorias(categoriasArray);
-    } catch (error) {
-      console.error('Error fetching categorias:', error);
-      setCategorias([]);
-    }
+  const fetchCategorias = () => {
+    const categoriasLocal = JSON.parse(localStorage.getItem('categorias') || '[]');
+    setCategorias(categoriasLocal);
   };
 
   const handleCreate = () => {
@@ -151,13 +133,6 @@ const ProductosPage: React.FC = () => {
     (categoriaSeleccionada === 0 || p.categoriaId === categoriaSeleccionada) &&
     (p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || p.descripcion.toLowerCase().includes(busqueda.toLowerCase()))
   );
-
-  const handleLimpiarDatos = () => {
-    localStorage.removeItem('productos');
-    localStorage.removeItem('ventas');
-    localStorage.removeItem('categorias');
-    window.location.reload();
-  };
 
   if (loading) {
     return <LoadingSpinner />;

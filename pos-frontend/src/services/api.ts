@@ -1,22 +1,8 @@
-import {
-    Producto,
-    Categoria,
-    Venta,
-    User,
-    LoginData,
-    RegisterData,
-    DashboardStats
-} from '../types';
 import axios from 'axios';
 import { getToken } from '../utils/auth';
+import { Venta, DashboardStats, LoginData, User, RegisterData } from '../types';
 
 const API_URL = 'http://localhost:8080/api';
-
-// Modifico getLocal para no inicializar nada automáticamente
-function getLocal<T>(key: string, defaultValue: T): T {
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : defaultValue;
-}
 
 // Productos
 export const getProductos = async (token: string) => {

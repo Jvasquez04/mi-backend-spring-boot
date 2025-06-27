@@ -10,7 +10,6 @@ import {
   Divider,
   List,
   ListItem,
-  ListItemIcon,
   ListItemText,
   Chip,
   TextField,

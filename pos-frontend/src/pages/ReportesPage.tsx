@@ -13,7 +13,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip,
   Button,
   Collapse,
   List,
@@ -24,10 +23,8 @@ import {
   TrendingUp, 
   ShoppingCart, 
   AttachMoney, 
-  Warning,
-  Download
+  Warning
 } from '@mui/icons-material';
-import { DashboardStats, Venta, Categoria, Producto } from '../types';
 import { getCategorias } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
@@ -40,8 +37,7 @@ import DialogActions from '@mui/material/DialogActions';
 import { getToken } from '../utils/auth';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
-const DownloadIcon = Download;
+import { Categoria, Venta } from '../types';
 
 const ReportesPage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
@@ -50,7 +46,6 @@ const ReportesPage: React.FC = () => {
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [categoriaDesplegada, setCategoriaDesplegada] = useState<number | null>(null);
   const [fechaInicio, setFechaInicio] = useState<Date | null>(null);
-  const [fechaFin, setFechaFin] = useState<Date | null>(null);
   const [ventaDetalle, setVentaDetalle] = useState<Venta | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -145,39 +140,8 @@ const ReportesPage: React.FC = () => {
   const ventasFiltradas = ventas.filter(v => {
     const fechaVenta = new Date(v.fecha);
     if (fechaInicio && fechaVenta.toLocaleDateString('es-PE') < fechaInicio.toLocaleDateString('es-PE')) return false;
-    if (fechaFin && fechaVenta.toLocaleDateString('es-PE') > fechaFin.toLocaleDateString('es-PE')) return false;
     return true;
   });
-
-  // Función para generar y descargar CSV
-  const descargarVentasCSV = () => {
-    const encabezado = 'ID Venta,Fecha,Producto,Cantidad,Precio Unitario,Total Venta\n';
-    let filas = '';
-    ventasPorDia.forEach(venta => {
-      // Agrupar productos por nombre y contar cantidad
-      const productosAgrupados: { [nombre: string]: { cantidad: number, precio: number } } = {};
-      (venta.productosVendidos || []).forEach(vp => {
-        const prod = vp.producto;
-        const cantidad = vp.cantidad;
-        if (!productosAgrupados[prod.nombre]) {
-          productosAgrupados[prod.nombre] = { cantidad: cantidad, precio: prod.precioVenta };
-        } else {
-          productosAgrupados[prod.nombre].cantidad += cantidad;
-        }
-      });
-      Object.entries(productosAgrupados).forEach(([nombre, info]) => {
-        filas += `${venta.id},${formatDate(venta.fecha)},"${nombre}",${info.cantidad},${info.precio},${venta.total}\n`;
-      });
-    });
-    const csv = encabezado + filas;
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ventas_${fechaInicio ? fechaInicio.toLocaleDateString('es-PE') : 'hoy'}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   console.log('Antes del return - authLoading:', authLoading, 'loading:', loading);
 
