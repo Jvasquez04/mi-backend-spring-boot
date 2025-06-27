@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # Base de datos MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: pos-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: posdb
+      MYSQL_USER: posuser
+      MYSQL_PASSWORD: pospass123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database_setup.sql:/docker-entrypoint-initdb.d/database_setup.sql
+    networks:
+      - pos-network
+    restart: unless-stopped
+
+  # Aplicación Spring Boot
+  pos-backend:
+    build:
+      context: ./pos-backend
+      dockerfile: Dockerfile
+    container_name: pos-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/posdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: posuser
+      SPRING_DATASOURCE_PASSWORD: pospass123
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: true
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+      SPRING_SQL_INIT_MODE: always
+      SPRING_SQL_INIT_SCHEMA_LOCATIONS: classpath:schema.sql
+      SERVER_PORT: 8080
+      SERVER_ERROR_INCLUDE_MESSAGE: always
+      SPRING_JACKSON_TIME_ZONE: America/Lima
+      JWT_SECRET: 586E3272357538782F413F4428472B4B6250655368566B597033733676397924
+      JWT_EXPIRATION: 86400000
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
+      LOGGING_LEVEL_COM_LICORERIABILLAR: DEBUG
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_FILTER_CORSFILTER: DEBUG
+    depends_on:
+      - mysql
+    networks:
+      - pos-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  pos-network:
+    driver: bridge 
