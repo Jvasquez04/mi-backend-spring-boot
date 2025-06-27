@@ -48,13 +48,13 @@ public class InMemorySecurityConfig {
     public UserDetailsService userDetailsService() {
         UserDetails admin = User.builder()
                 .username("admin")
-                .password(passwordEncoder().encode("admin1234"))
+                .password(passwordEncoder().encode("admin123"))
                 .roles("ADMIN")
                 .build();
 
         UserDetails cajero = User.builder()
                 .username("cajero")
-                .password(passwordEncoder().encode("cajero1234"))
+                .password(passwordEncoder().encode("cajero123"))
                 .roles("CAJERO")
                 .build();
 
